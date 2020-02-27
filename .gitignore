@@ -1,0 +1,7 @@
+Pipfile
+Pipfile.lock
+settings.py
+*.db
+__pycache__
+.vscode
+*.swp

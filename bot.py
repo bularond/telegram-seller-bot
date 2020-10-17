@@ -24,9 +24,7 @@ payments = qiwi()
 menu_keyboard = [
     [InlineKeyboardButton("Каталог", callback_data='catalog')],
     [InlineKeyboardButton("Мои покупки", callback_data='purchases')],
-    [InlineKeyboardButton("Гарантии", callback_data='warranty')],
-    [InlineKeyboardButton("Отзывы", url="https://google.com")],
-    [InlineKeyboardButton("Поддержка", url="https://yandex.ru")]
+    [InlineKeyboardButton("Поддержка", url="t.me/codollan")]
 ]
 menu_markup= InlineKeyboardMarkup(menu_keyboard, one_time_keyboard=True)
 
@@ -45,7 +43,7 @@ def start_over(update, context):
         chat_id=querry.message.chat_id,
         message_id=querry.message.message_id,
         text="Главное меню",
-        reply_markup=menu_markup
+    reply_markup=menu_markup
     )
 
     return MENU
@@ -90,7 +88,7 @@ def catalog(update, context):
         ])
         reply_markup = InlineKeyboardMarkup(keyboard)
     else:
-        text = "Каталог пока пуст, но скоро в нем появятся новые товары. Обязательно возвращайтесь."
+        reply_text = "Каталог пока пуст, но скоро в нем появятся новые товары. Обязательно возвращайтесь."
         keyboard = [
             [InlineKeyboardButton('Назад', callback_data='back')]
         ]
@@ -135,9 +133,12 @@ def buy(update, context):
     code = db.has_purchase(querry.message.chat_id, item[0])
     if(code == None):
         code = db.add_purchase(querry.message.chat_id, item[0])
+
+    url = payments.get_url(code, item[3])
+
     text  = f"К оплате {item[3]} рублей.\n"\
-            f"Чтобы получить ключ переведите деньги на счет qiwi.com/p/{qiwi_account}.\n"\
-            f"В коментариях укажите {code}.\n\n"
+            f"Чтобы получить ключ переведите деньги по ссылке ниже.\n"\
+            f"[qiwi]({url})"
     keyboard = [
         [InlineKeyboardButton("Проверить оплату", callback_data=f'{code}')],
         [InlineKeyboardButton("Назад", callback_data='back')]
@@ -147,7 +148,8 @@ def buy(update, context):
         chat_id=querry.message.chat_id,
         message_id=querry.message.message_id,
         text=text,
-        reply_markup=reply_markup
+        reply_markup=reply_markup,
+        parse_mode="markdown"
     )
     return BUY
 
@@ -159,9 +161,9 @@ def check(update, context):
     status = payments.check_payment(code, product[3])
     if(status == 2): # sucksess
         key = db.get_key_by_product_id(product[0])
+        db.add_key_to_user(key[2], querry.message.chat_id)
         db.remove_purcases_by_code(code)
         db.remove_key(key[2])
-        db.add_key_to_user(key[2], querry.message.chat_id)
         text  = f"Покупка прошла успешно.\n\n"\
                 f"Ваш ключ {key[2]}.\n\n"\
                 f"Вы так же сможете посмотреть его в разделе Мои покупки."
@@ -169,12 +171,6 @@ def check(update, context):
             [InlineKeyboardButton("Назад", callback_data='back')]
         ]
         reply_markup = InlineKeyboardMarkup(keypad)
-        context.bot.edit_message_text(
-            chat_id=querry.message.chat_id,
-            message_id=querry.message.message_id,
-            text="```123123``` ***123321321123***",
-            parse_mode="Markdown"
-        )
         context.bot.send_message(
             chat_id=querry.message.chat_id,
             text=text,

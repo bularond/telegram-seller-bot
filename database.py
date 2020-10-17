@@ -89,14 +89,14 @@ class database:
     def remove_key(self, key):
         with sqlite3.connect('database.db') as conn:
             conn.execute(f"DELETE FROM keys "\
-                         f"WHERE key == {key}")
+                         f"WHERE key == \"{key}\"")
             conn.commit()
 
 
     def add_key_to_user(self, key, user_id):
         with sqlite3.connect('database.db') as conn:
             conn.execute(f"INSERT INTO users_keys (key, user_id, datetime) "\
-                         f"VALUES ({key}, {user_id}, {time()})")
+                         f"VALUES (\"{key}\", {user_id}, {int(time())})")
             conn.commit()
 
 

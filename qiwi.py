@@ -30,6 +30,9 @@ class qiwi:
                     return 2
         return status
 
+    def get_url(self, code, cost):
+        return f"https://qiwi.com/payment/form/99?currency=643&amountInteger={cost}&amountFraction=0&extra['account']={qiwi_account}&extra['comment']={code}&blocked[0]=sum&blocked[1]=account&blocked[2]=comment"
+
 if __name__ == "__main__":
     pay = qiwi()
     print(pay.check_payment('96171', 3))
